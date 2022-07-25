@@ -1,2 +1,33 @@
 server:
   port: '8080'
+spring:
+  cloud:
+    consul:
+      discovery:
+        instanceId: gateway
+        health-check-interval: 5s
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+      - id: service-a
+        uri: lb://service-a
+        predicates:
+        - Path=/moshe/**
+        filters:
+        - RewritePath=/moshe/(?<segment>.*), /$\{segment}
+        - name: CircuitBreaker
+          args:
+            name: monitor-srvA
+            fallbackUri: forward:/fallback/serviceA
+      - id: service-b
+        uri: lb://service-b
+        predicates:
+        - Path=/kobi/**
+        filters:
+        - RewritePath=/kobi/(?<segment>.*), /$\{segment}
+        - name: CircuitBreaker
+          args:
+            name: monitor-srvB
+            fallbackUri: forward:/fallback/serviceB
